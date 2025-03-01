@@ -50,7 +50,7 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(requests -> requests
                         // 특정 URL 패턴은 모든 사용자에게 허용
-                        .requestMatchers("/uploads/**", "/upload/image", "/member/login", "/member/logout","/product/favorite/**","member/check-emails").permitAll()
+                        .requestMatchers("/uploads/**", "/upload/image", "/member/login", "/member/logout","/product/favorite/**").permitAll()
                         // 로그인된 사용자만 경로에 접근할 수 있도록 설정
                         .requestMatchers("/product/register","/member/messagePage","/sendMessage","/product/complete/**","member/mypage",
                                 "member/update","member/password", "chat/**").authenticated()

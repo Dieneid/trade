@@ -162,6 +162,8 @@
             <!-- 상품 등록 폼 -->
             <form th:action="@{/product/register}" th:object="${product}" th:method="post" class="registerForm"
                   enctype="multipart/form-data">
+                <!-- 인증 객체에서 email 자동 가져오기 -->
+                <input type="hidden" name="email" th:value="${member.email}"/>
                 <!-- CSRF 토큰 추가 -->
                 <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
 

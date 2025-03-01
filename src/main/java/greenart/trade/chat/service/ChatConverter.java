@@ -13,8 +13,6 @@ public class ChatConverter {
     public ChatRoomDTO toChatRoomDTO(ChatRoom chatRoom) {
         return new ChatRoomDTO(
                 chatRoom.getChatRoomId(),
-                chatRoom.getSender().getProfileImageUrl(),
-                chatRoom.getReceiver().getProfileImageUrl(),
                 chatRoom.getSender().getMemberId(),    // Sender ID
                 chatRoom.getReceiver().getMemberId(),  // Receiver ID
                 chatRoom.getSender().getName(),        // Sender Name

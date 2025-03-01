@@ -10,7 +10,7 @@
 .navbar .nav-link {
     font-size: 14px; /* 링크 텍스트 크기 */
     padding: 8px 12px; /* 링크 간 내부 여백 */
-    color: black; /* 글자 색상을 흰색으로 설정 */
+    color: black;
     font-weight: bold; /* 글자를 두껍게 설정 */
     text-decoration: none; /* 밑줄 제거 (선택 사항) */
 }
@@ -31,7 +31,6 @@
     padding: 20px;
 }
 
-
 @font-face {
     font-family: 'SDSamliphopangche_Outline';
     src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts-20-12@1.0/SDSamliphopangche_Outline.woff') format('woff');
@@ -42,4 +41,3 @@
 body {
     font-family: 'SDSamliphopangche_Outline', sans-serif;
 }
-

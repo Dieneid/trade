@@ -11,8 +11,6 @@ import java.util.List;
 @NoArgsConstructor
 public class ChatRoomDTO {
     private Long chatRoomId;
-    private String senderProfileImageUrl;
-    private String receiverProfileImageUrl;
     private Long senderId;
     private Long receiverId;
     private String senderName;

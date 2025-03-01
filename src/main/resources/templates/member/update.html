@@ -221,9 +221,6 @@
                 <div class="nav-item">
                     <a th:href="@{/member/password}" class="btn btn-outline-primary">비밀 번호 변경</a>
                 </div>
-                <div th:if="${message}" style="color: blue;">
-                    <p th:text="${message}"></p>
-                </div>
                 <br>
 
                 <label for="PhoneNumber">전화번호</label>
@@ -243,11 +240,14 @@
                 <button type="submit">회원 정보 수정</button>
                 <input type="hidden" name="email" th:value="${memberDTO.email}">
                 <button id="deleteButton" type="button" class="btn btn-outline-danger" onclick="confirmDelete()">회원 탈퇴</button>
-                <div th:if="${error}" style="color: red;">
-                    <p th:text="${error}"></p>
-                </div>
             </form>
 
+        <div th:if="${message}" style="color: blue;">
+            <p th:text="${message}"></p>
+        </div>
+        <div th:if="${error}" style="color: red;">
+            <p th:text="${error}"></p>
+        </div>
         </body>
     </th:block>
 </th:block>

@@ -109,26 +109,12 @@
         gap: 20px; /* 항목 사이 간격 */
     }
 
-    .product-image-container {
-        weight: auto;
-        height: auto; /* 고정 높이 설정 */
-        position: relative; /* 오버레이를 이미지에 맞게 위치시키기 위한 설정 */
-    }
-
     /* 상품 이미지 스타일 */
     .product-image {
         width: 100%; /* 너비를 100%로 설정하여 부모 요소에 맞게 크기 조정 */
         height: 150px; /* 고정 높이 설정 */
-        object-fit: contain; /* 이미지가 잘리지 않도록 비율 유지 */
+        object-fit: cover; /* 이미지가 잘리지 않도록 비율 유지 */
         border-radius: 8px; /* 모서리 둥글게 */
-    }
-
-    .favorite-image {
-        width: 100%; /* 너비를 100%로 설정하여 부모 요소에 맞게 크기 조정 */
-        height: 150px; /* 고정 높이 설정 */
-        object-fit: contain; /* 이미지가 잘리지 않도록 비율 유지 */
-        border-radius: 8px; /* 모서리 둥글게 */
-        position: relative;
     }
 
     /* 상품 제목과 가격 */
@@ -145,30 +131,6 @@
         font-weight: bold;
         text-align: center;
         margin-top: 10px;
-    }
-
-    .RESERVED-image,
-    .SOLDOUT-image {
-        opacity: 0.3; /* 불투명도 조정 */
-        position: relative; /* 오버레이 적용을 위한 상대 위치 */
-        z-index: 0; /* 오버레이 아래로 설정 */
-    }
-    .RESERVED-overlay,
-    .SOLDOUT-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5); /* 반투명 검정 */
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        color: white;
-        font-size: 1rem;
-        z-index: 10; /* 필요 시 적절한 z-index 설정 */
-        font-weight: bold;
-        border-radius: 8px; /* 모서리 둥글게 */
     }
 
     /* 탭 전체 스타일 */
@@ -306,26 +268,16 @@
                     <th:block th:each="dto : ${productDTOList}" th:if="${dto.productId == product.productId}">
                         <!-- 상품 이미지 -->
                         <a th:href="@{/product/read/{productId}(productId=${dto.productId})}" class="product-link">
-                            <div class="product-image-container">
-                                <th:block th:if="${dto.firstImageId != null}" a>
-                                    <img th:src="@{/product/images/{imageId}(imageId=${dto.firstImageId})}"
-                                         alt="상품 이미지"
-                                         th:classappend="${product.status == 'SOLDOUT' ? 'SOLDOUT-image' : (product.status == 'RESERVED' ? 'RESERVED-image' : '')}"
-                                         class="product-image">
-                                </th:block>
-                                <th:block th:if="${dto.firstImageId == null}">
-                                    <img src="/images/default.png"
-                                         alt="기본 이미지"
-                                         th:classappend="${product.status == 'SOLDOUT' ? 'SOLDOUT-image' : (product.status == 'RESERVED' ? 'RESERVED-image' : '')}"
-                                         class="product-image">
-                                </th:block>
-                                <th:block th:if="${product.status == 'SOLDOUT'}">
-                                    <div class="SOLDOUT-overlay">판매 완료</div>
-                                </th:block>
-                                <th:block th:if="${product.status == 'RESERVED'}">
-                                    <div class="RESERVED-overlay">판매 예약</div>
-                                </th:block>
-                            </div>
+                            <th:block th:if="${dto.firstImageId != null}">
+                                <img th:src="@{/product/images/{imageId}(imageId=${dto.firstImageId})}"
+                                     alt="상품 이미지"
+                                     class="product-image">
+                            </th:block>
+                            <th:block th:if="${dto.firstImageId == null}">
+                                <img src="/images/default.png"
+                                     alt="기본 이미지"
+                                     class="product-image">
+                            </th:block>
                         </a>
                         <!-- 상품 제목과 가격 -->
                         <p class="product-title" th:text="${product.title}"></p>
@@ -361,21 +313,21 @@
                         </div>
                     </span><br>
                     <!-- 리뷰 목록 출력 -->
-                    <th:block th:each="review, iterStat : ${reviews}">
+                    <th:block th:each="review : ${reviews}">
                         <li>
                             <div class="review-header">
-                                <!-- 인덱스를 활용하여 프로필 이미지 URL 매칭 -->
-                                <img th:src="@{|${profileImageUrls[iterStat.index]}|}" alt="Profile Image" class="profile-image">
+                                <img th:src="@{${profileImageUrl}}" alt="Profile Image" class="profile-image">
                                 <p class="author-name" th:text="${review.authorUsername}"></p> <!-- 작성자 이름 -->
                             </div>
                             <h3 th:text="${review.product.title}"></h3> <!-- 상품 제목 -->
                             <span>평가:<span class="stars">
-                <!-- 별점 표시 -->
-                <th:block th:each="star : ${#numbers.sequence(1, 5)}">
-                    <span th:if="${star <= review.evaluation.score}">★</span>
-                    <span th:if="${star > review.evaluation.score}">☆</span>
-                </th:block>
-            </span></span>
+                                    <!-- 별점 표시 -->
+                                    <th:block th:each="star : ${#numbers.sequence(1, 5)}">
+                                        <span th:if="${star <= review.evaluation.score}">★</span>
+                                        <span th:if="${star > review.evaluation.score}">☆</span>
+                                   </th:block>
+                              </span>
+                            </span>
                             <p th:text="${review.message}"></p> <!-- 리뷰 내용 -->
                         </li>
                     </th:block>
@@ -398,47 +350,39 @@
                 <tbody>
                 <tr th:each="product : ${favoriteProducts}">
                     <td>
-                        <th:block th:each="dto : ${productDTOList}" th:if="${dto.productId == product.productId}">
-                            <a th:href="@{/product/read/{productId}(productId=${dto.productId})}" class="product-link">
-                                <div class="product-image-container">
-                                    <th:block th:if="${dto.firstImageId != null}">
-                                        <img th:src="@{/product/images/{imageId}(imageId=${dto.firstImageId})}"
-                                             alt="상품 이미지"
-                                             th:classappend="${product.status == 'SOLDOUT' ? 'SOLDOUT-image' : (product.status == 'RESERVED' ? 'RESERVED-image' : '')}"
-                                             class="favorite-image">
-                                    </th:block>
-                                    <th:block th:if="${dto.firstImageId == null}">
-                                        <img src="/images/default.png"
-                                             alt="기본 이미지"
-                                             class="favorite-image">
-                                    </th:block>
-                                    <!-- 상태별 오버레이 텍스트 -->
-                                    <th:block th:if="${product.status == 'SOLDOUT' or product.status == 'RESERVED'}">
-                                        <div th:classappend="${product.status == 'SOLDOUT' ? 'SOLDOUT-overlay' : 'RESERVED-overlay'}">
-                                            <span th:text="${product.status == 'SOLDOUT' ? '판매 완료' : '판매 예약'}"></span>
-                                        </div>
-                                    </th:block>
-                                </div>
-                            </a>
-                        </th:block>
+                        <div class="product-image-container">
+                            <th:block th:each="dto : ${productDTOList}" th:if="${dto.productId == product.productId}">
+                                <th:block th:if="${dto.firstImageId != null}">
+                                    <img th:src="@{/product/images/{imageId}(imageId=${dto.firstImageId})}"
+                                         alt="상품 이미지"
+                                         style="width: 100px; height: 100px;">
+                                </th:block>
+                                <th:block th:if="${dto.firstImageId == null}">
+                                    <img src="/images/default.png"
+                                         alt="기본 이미지"
+                                         style="width: 100px; height: 100px;">
+                                </th:block>
+                            </th:block>
+                        </div>
                     </td>
                     <td th:text="${product.member.getName()}"></td>
                     <td>
                         <a th:href="@{/product/read/{productId}(productId=${product.productId})}">[[${product.title}]]</a>
                     </td>
-                    <td th:text="${#temporals.format(product.refreshedAt, 'yyyy-MM-dd HH:mm')}"></td>
+                       <span class="formatted-date" th:text="${product.refreshedAt}"></span>
                     <td>
                         <i class="favorite-icon liked"
                            th:id="'fav-icon-' + ${product.productId}"
                            th:onclick="'removeFavorite(' + ${product.productId} + ')'"
                            style="cursor: pointer; color: red;">
-                            ❤️
+                            &#10084; <!-- 빨간 하트 -->
                         </i>
                     </td>
                 </tr>
                 </tbody>
             </table>
         </div>
+
 
         <script>
             function showTab(tabId) {
@@ -483,45 +427,34 @@
                     });
             }
 
-            function openBlackList() {
+                                    function openBlackList() {
                 const url = '/member/black'; // 새 창에서 열 URL
                 const windowFeatures = 'width=400,height=400,scrollbars=yes,resizable=yes';
                 window.open(url, 'BlackListWindow', windowFeatures);
             }
 
-            // 페이지 로드 후 모든 날짜 포맷팅
-            document.addEventListener('DOMContentLoaded', function () {
-                const dateElements = document.querySelectorAll('.formatted-date');
+                            // 페이지 로드 후 모든 날짜 포맷팅
+    document.addEventListener('DOMContentLoaded', function () {
+        const dateElements = document.querySelectorAll('.formatted-date');
 
-                dateElements.forEach(function (element) {
-                    const dateStr = element.textContent;
-                    const date = new Date(dateStr); // 서버에서 받은 날짜를 Date 객체로 변환
-                    const formattedDate = new Intl.DateTimeFormat('ko-KR').format(date); // 년-월-일 포맷
+        dateElements.forEach(function (element) {
+            const dateStr = element.textContent;
+            const date = new Date(dateStr); // 서버에서 받은 날짜를 Date 객체로 변환
+            const formattedDate = new Intl.DateTimeFormat('ko-KR').format(date); // 년-월-일 포맷
 
-                    element.textContent = formattedDate; // 포맷팅된 날짜로 변경
-                });
-            });
-                        // Thymeleaf 변수로 memberDTO.averageScore를 가져옵니다
-            var averageScore = [[${memberDTO.averageScore}]];
+            element.textContent = formattedDate; // 포맷팅된 날짜로 변경
+        });
+    });
+                // Thymeleaf 변수로 memberDTO.averageScore를 가져옵니다
+    var averageScore = [[${memberDTO.averageScore}]];
 
-            // 소수점 둘째 자리까지 반올림하여 포맷
-            var formattedScore = averageScore.toFixed(2);
+    // 소수점 둘째 자리까지 반올림하여 포맷
+    var formattedScore = averageScore.toFixed(2);
 
-            // 결과를 span 요소에 삽입
-            document.getElementById('averageScore').textContent = formattedScore;
+    // 결과를 span 요소에 삽입
+    document.getElementById('averageScore').textContent = formattedScore;
         </script>
         </body>
     </th:block>
 </th:block>
-        <div th:replace="layout/footer :: footer"></div>
-<style>
-    .footer {
-        margin-top: 20px;
-        background-color: #333;
-        color: white;
-        text-align: center;
-        padding: 10px;
-        height: 200px;
-    }
-</style>
 </html>

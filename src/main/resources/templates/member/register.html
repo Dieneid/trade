@@ -222,10 +222,7 @@
                    th:field="*{CompPassword}"/><br>
 
             <label for="registerPhoneNumber">전화번호</label>
-            <input type="text" id="registerPhoneNumber" class="form-control" placeholder="휴대폰 번호를 불러옵니다" th:field="*{phoneNumber}" /><br>
-            <button id="phonenumber" type="button">휴대폰 인증</button>
-            <div id="result"></div>
-
+            <input type="text" id="registerPhoneNumber" class="form-control" th:field="*{phoneNumber}"/><br>
 
             <button id="findAddress" type="button" onclick="openZipSearch()">주소/우편번호 찾기</button>
             <br>
@@ -239,10 +236,10 @@
             <input type="text" id="zipcode" class="form-control" th:field="*{zipcode}" readonly/><br>
 
             <button type="submit">회원가입</button>
-            <div th:if="${message}" style="color: blue;">
-                <p th:text="${message}"></p>
-            </div>
         </form>
+        <div th:if="${message}" style="color: blue;">
+            <p th:text="${message}"></p>
+        </div>
         </body>
     </th:block>
 </th:block>
@@ -482,48 +479,6 @@
             }
         }
     });
-
-        document.getElementById("phonenumber").addEventListener("click", function () {
-        const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
-        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
-
-        const resultElement = document.getElementById("result");
-        resultElement.innerText = "휴대폰으로 해당 이메일에 메세지를 보내주세요. (dieneid13@gmail.com)...";
-
-        const randomCode = Math.floor(1000 + Math.random() * 9000); // 1000 ~ 9999
-        console.log("Generated Code:", randomCode);
-
-        resultElement.innerHTML = `휴대폰 문자로 (dieneid13@gmail.com)에 인증 번호를 보내주세요. <br>(인증 번호): ${randomCode}`;
-
-        fetch("/member/check-emails", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                [csrfHeader]: csrfToken // CSRF 토큰 추가
-            },
-            body: JSON.stringify({ randomCode: randomCode }) // body에 randomCode 포함
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("Network response was not ok");
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.phoneNumber) {
-                    document.getElementById("registerPhoneNumber").value = data.phoneNumber;
-                    resultElement.innerText = "전화번호를 불러왔습니다: " + data.carrier + " " + data.phoneNumber;
-                } else {
-                    resultElement.innerText = data.error || "전화번호를 찾을 수 없습니다.";
-                }
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                resultElement.innerText = "오류 발생: " + error.message;
-            });
-    });
-
-
 </script>
 <script th:if="${registerError}" th:inline="javascript">
     /*<![CDATA[*/

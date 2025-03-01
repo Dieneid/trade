@@ -1,57 +1,46 @@
 package greenart.trade.mebmer.service;
 
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+import lombok.RequiredArgsConstructor;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
-import javax.mail.*;
-import java.util.Properties;
-
 @Service
+@RequiredArgsConstructor
 public class MailService {
 
-    private static final String SENDER_EMAIL = "dieneid13@gmail.com";
-    private static final String SENDER_PASSWORD = "";
-    private static int verificationCode;
+    private final JavaMailSender mailSender;
+    private static final String sendEmail = "dieneid13@gmail.com";
+    private static int number;
 
-    /**
-     * 인증 번호 생성
-     */
-    private static void createVerificationCode() {
-        verificationCode = (int) (Math.random() * 90000) + 100000; // 6자리 숫자 생성
+    private static void createNumber() {
+        number = (int)(Math.random() * (90000)) + 100000;
     }
 
-    /**
-     * 이메일 전송 및 인증 번호 반환
-     */
-    public int sendMail(String recipientEmail) {
-        createVerificationCode(); // 인증 번호 생성
-
-        Properties props = new Properties();
-        props.put("mail.smtp.host", "smtp.gmail.com");
-        props.put("mail.smtp.port", "");
-        props.put("mail.smtp.auth", "true");
-        props.put("mail.smtp.starttls.enable", "true");
-
-        Session session = Session.getInstance(props, new Authenticator() {
-            @Override
-            protected PasswordAuthentication getPasswordAuthentication() {
-                return new PasswordAuthentication(SENDER_EMAIL, SENDER_PASSWORD);
-            }
-        });
+    public MimeMessage createMessage(String email) {
+        createNumber();
+        MimeMessage message = mailSender.createMimeMessage();
 
         try {
-            javax.mail.internet.MimeMessage message = new javax.mail.internet.MimeMessage(session);
-            message.setFrom(new javax.mail.internet.InternetAddress(SENDER_EMAIL));
-            message.setRecipient(Message.RecipientType.TO, new javax.mail.internet.InternetAddress(recipientEmail));
+            message.setFrom(sendEmail);
+            message.setRecipients(MimeMessage.RecipientType.TO, email);
             message.setSubject("이메일 인증입니다.");
-            message.setText("<h1>인증 번호: " + verificationCode + "</h1>", "UTF-8", "html");
-
-            Transport.send(message); // 이메일 전송
-            System.out.println("메일 전송 성공! 인증 번호: " + verificationCode);
+            String body = "";
+            body += "<h3>" + "요청한 이메일 인증 번호입니다." + "</h3>";
+            body += "<h1>" + number + "</h1>";
+            body += "<h3>" + "감사합니다." + "</h3>";
+            message.setText(body, "utf-8", "html");
         } catch (MessagingException e) {
-            e.printStackTrace();
-            throw new RuntimeException("메일 전송 실패: " + e.getMessage(), e);
+            throw new RuntimeException(e);
         }
+        return message;
+    }
 
-        return verificationCode; // 생성된 인증 번호 반환
+    public int sendMail(String email) {
+        MimeMessage message = createMessage(email);
+        mailSender.send(message);
+
+        return number;
     }
 }

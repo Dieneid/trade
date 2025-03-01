@@ -4,7 +4,6 @@ import greenart.trade.mebmer.dto.*;
 import greenart.trade.mebmer.entity.Member;
 import greenart.trade.mebmer.repository.MemberRepository;
 import greenart.trade.mebmer.service.BlackListService;
-import greenart.trade.mebmer.service.EmailProcessor;
 import greenart.trade.mebmer.service.MailService;
 import greenart.trade.mebmer.service.MemberService;
 import greenart.trade.product.dto.CategoryDTO;
@@ -50,10 +49,6 @@ public class MemberController {
     private final ReviewServiceImpl reviewServiceImpl;
     private final ReviewRepository reviewRepository;
     private final ReviewService reviewService;
-    // =================================================================== 추가 ========================================
-    // =================================================================== 추가 ========================================
-    // =================================================================== 추가 ========================================
-    // =================================================================== 추가 ========================================
     private int number;
 
     @GetMapping("/login")
@@ -128,25 +123,13 @@ public class MemberController {
             List<ProductDTO> productDTOList = productServiceImpl.getAllProducts();
             List<Product> myproductList = productRepository.findByMemberIdAndEnabledTrueOrderByRefreshedAtDesc(member.getMemberId());
 
-            List<String> profileImageUrls = new ArrayList<>();
-
             for (Review review : reviews) {
                 String authUsername = review.getAuthorUsername();
-                Optional<Member> writerOpt = memberRepository.findByName(authUsername);
-
-                if (writerOpt.isPresent()) {
-                    Member writer = writerOpt.get();
-                    // 프로필 이미지 URL 생성
-                    String profileImageUrl = writer.getProfileImageUrl(); // 상대 경로 처리
-                    // 기본 이미지 처리
-                    if (profileImageUrl == null || profileImageUrl.isEmpty()) {
-                        profileImageUrl = "/images/default.png";
-                    }
-                    profileImageUrls.add(profileImageUrl);
-                }
+                Member writers = memberRepository.findByName(authUsername).get();
+                // 프로필 이미지 URL 생성
+                String profileImageUrl = writers.getProfileImageUrl(); // 상대 경로 처리
+                model.addAttribute("profileImageUrl", profileImageUrl);
             }
-
-            model.addAttribute("profileImageUrls", profileImageUrls);
 
             List<ProductDTO> productDTOs = myproductList.stream()
                     .map(product -> {
@@ -156,7 +139,6 @@ public class MemberController {
                         productDTO.setSellPrice(product.getSellPrice());
                         productDTO.setViewCount(product.getViewCount());
                         productDTO.setDescription(product.getDescription());
-                        productDTO.setStatus(product.getStatus().toString());
                         productDTO.setCreatedAt(product.getCreatedAt());
                         productDTO.setUpdatedAt(product.getUpdatedAt());
                         productDTO.setRefreshedAt(product.getRefreshedAt());
@@ -210,8 +192,12 @@ public class MemberController {
         return "member/mypage";
     }
 
+//    =============================================================================== 수정 ============================
+//    =============================================================================== 수정 ============================
     @GetMapping("/memberpage/{memberId}")
     public String showMemberPage(@PathVariable Long memberId, Model model, @AuthenticationPrincipal AuthDTO authDTO) {
+//    =============================================================================== 수정 ============================
+//    =============================================================================== 수정 ============================
         Optional<Member> memberOpt = memberRepository.findById(memberId);
 
         if (memberOpt.isPresent()) {
@@ -227,11 +213,6 @@ public class MemberController {
                 Member writers = memberRepository.findByName(authUsername).get();
                 // 프로필 이미지 URL 생성
                 String profileImageUrl = writers.getProfileImageUrl(); // 상대 경로 처리
-                // 기본 이미지 처리
-                if (profileImageUrl == null || profileImageUrl.isEmpty()) {
-                    profileImageUrl = "/images/default.png";
-                    System.out.println("profileImageUrl = " + profileImageUrl);
-                }
                 model.addAttribute("profileImageUrl", profileImageUrl);
             }
 
@@ -243,7 +224,6 @@ public class MemberController {
                         productDTO.setSellPrice(product.getSellPrice());
                         productDTO.setViewCount(product.getViewCount());
                         productDTO.setDescription(product.getDescription());
-                        productDTO.setStatus(product.getStatus().toString());
                         productDTO.setCreatedAt(product.getCreatedAt());
                         productDTO.setUpdatedAt(product.getUpdatedAt());
                         productDTO.setRefreshedAt(product.getRefreshedAt());
@@ -273,8 +253,12 @@ public class MemberController {
                 }
             }
 
+//    =============================================================================== 수정 ============================
+//    =============================================================================== 수정 ============================
             model.addAttribute("authDTO", authDTO);
             memberDTO.setMemberId(memberId);
+//    =============================================================================== 수정 ============================
+//    =============================================================================== 수정 ============================
             model.addAttribute("memberDTO", memberDTO);
             model.addAttribute("reviews", reviews);
             model.addAttribute("memberId", member.getMemberId());
@@ -480,58 +464,11 @@ public class MemberController {
         return ResponseEntity.ok(response);
     }
 
-    //========================================================= 추가 ================================================
-    //========================================================= 추가 ================================================
-    @PostMapping("/check-emails")
-    @ResponseBody
-    public Map<String, String> checkEmails(@RequestBody Map<String, Object> request) {
-        Map<String, String> response = new HashMap<>();
-        try {
-            // randomCode 값 추출
-            int randomCode = (int) request.get("randomCode");
-            System.out.println("Received Random Code: " + randomCode);
-
-            EmailProcessor emailProcessor = new EmailProcessor();
-            emailProcessor.setLastCheckedDate(new Date()); // 클릭 시점 저장
-
-            String phoneNumber = null;
-            String carrier = null;
-
-            // 최대 3분 동안 2초 간격으로 이메일 확인
-            for (int i = 0; i < 90; i++) {
-                emailProcessor.checkEmails(randomCode);
-
-                phoneNumber = emailProcessor.getLatestPhoneNumber();
-                carrier = emailProcessor.getLatestCarrier();
-
-                if (phoneNumber != null && carrier != null) {
-                    break; // 이메일이 확인되면 즉시 종료
-                }
-
-                Thread.sleep(2000); // 2초 대기
-            }
-
-            if (phoneNumber != null && carrier != null) {
-                response.put("phoneNumber", phoneNumber);
-                response.put("carrier", carrier);
-            } else {
-                response.put("error", "3분 동안 새로운 이메일에서 전화번호를 찾을 수 없습니다.");
-            }
-        } catch (Exception e) {
-            response.put("error", "An error occurred: " + e.getMessage());
-        }
-        return response;
-    }
-
-    //========================================================= 추가 ================================================
-    //========================================================= 추가 ================================================
-
     @PostMapping("/register")
     public String createMember(MemberDTO memberDTO, RedirectAttributes rttr, HttpServletRequest request, Model model) {
         try {
             memberService.createMember(memberDTO);
             request.login(memberDTO.getEmail(), memberDTO.getPassword());
-
 
             rttr.addFlashAttribute("message","회원 가입 완료");
             return "redirect:/";
@@ -604,18 +541,17 @@ public class MemberController {
     public ResponseEntity<Map<String, Object>> mailSend(@RequestParam String email) {
         Map<String, Object> map = new HashMap<>();
         try {
-            System.out.println("이메일 전송 시작: " + email);
             number = mailService.sendMail(email);
-            System.out.println("인증 번호 생성 완료: " + number);
+            String num = String.valueOf(number);
 
             map.put("success", Boolean.TRUE);
-            map.put("number", String.valueOf(number));
-            return ResponseEntity.ok(map);
+            map.put("number", num);
+            return ResponseEntity.ok(map); // 상태 코드 200과 함께 응답 반환
         } catch (Exception e) {
-            e.printStackTrace();
             map.put("success", Boolean.FALSE);
             map.put("error", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map);
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(map); // 상태 코드 500과 함께 응답 반환
         }
     }
 

@@ -30,13 +30,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
-    // ============================================ 추가 ===========================================
-    // ============================================ 추가 ===========================================
-    implementation 'javax.mail:javax.mail-api:1.6.2'
-    implementation 'com.sun.mail:jakarta.mail:1.6.7'
-    // ============================================ 추가 ===========================================
-    // ============================================ 추가 ===========================================
-
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
 
     testImplementation 'org.springframework.security:spring-security-test'
     compileOnly 'org.projectlombok:lombok'

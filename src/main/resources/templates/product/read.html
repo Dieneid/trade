@@ -1,5 +1,6 @@
 <div th:replace="~{layout/head}"></div>
 <link rel="stylesheet" href="/css/read.css">
+<link rel="stylesheet" href="/css/chatRoomList.css">
 </head>
 <div th:replace="layout/sidebar :: sidebar"></div>
 <th:block th:replace="~{/layout/basic::setContent(~{this::content})}">
@@ -84,24 +85,27 @@
                         </div>
                         <div class="form-group">
                             </br>
-                            <h2 id="sellPrice" th:text="${formattedSellPrice}+' 원'" style="font-size: 3rem">가격</h2>
+                            <h2 id="sellPrice" th:text="${product.sellPrice}+' 원'" style="font-size: 3rem">가격</h2>
                         </div>
                         <hr>
 
                         <div class="form-group">
-
                             <a th:href="${authDTO != null && authDTO.memberId == product.memberId} ? '/member/mypage' : '/member/memberpage/' + ${product.memberId}"
                                th:text="${product.memberName}"
                                th:attr="data-member-id=${product.memberId}">
                             </a>
-
                         </div>
+<!--                        ============================================================ 수정 ====================-->
+<!--                        ============================================================ 수정 ====================-->
                         <!-- 조회수 아이콘과 카운트 -->
                         <div class="view-stat">
                             ❤️ <span class="favorite-allCount" th:text="${product.favoriteCount}">0</span>
                             👁️ <span class="view-count" th:text="${product.viewCount}">0</span>
                             🕖 <span class="create-date" th:text="${#temporals.format(product.refreshedAt, 'yyyy-MM-dd HH:mm')}"></span>
                         </div>
+<!--                        ============================================================ 수정 ====================-->
+<!--                        ============================================================ 수정 ====================-->
+
                         <!-- 수정하기, 삭제하기, 끌올 버튼은 isOwner가 true일 때만 표시 -->
                         <div class="owner-actions" th:if="${isOwner}">
                             <a th:href="@{/product/edit/{productId}(productId=${product.productId})}"
@@ -174,10 +178,10 @@
                         <div class="chat-box">
                             <div id="messages" class="messages" style="height: 300px; overflow-y: auto;"></div>
                         </div>
-                        <div class="message-box">
+                        <div class="input-container mt-3">
                             <textarea id="messageContent" class="form-control" rows="2" placeholder="메시지를 입력하세요"
                                       required></textarea>
-                            <button id="sendMessage" class="message-submit" onclick="sendMessage()">전송</button>
+                            <button id="sendMessage" class="btn btn-primary mt-2" onclick="sendMessage()">전송</button>
                         </div>
                     </div>
                 </div>
@@ -195,7 +199,6 @@
     let receiverId = null;
     let senderName = null;
     let receiverName = null;
-    let stompClient = null;
 
     // 모달이 열리면 채팅방 ID 설정
     $('#chatModal').on('shown.bs.modal', function (event) {
@@ -206,10 +209,9 @@
         senderName = button.getAttribute('data-sender-name');
         receiverName = button.getAttribute('data-receiver-name');
         const authDTO = button.getAttribute('data-auth-dto'); // authDTO 가져오기
-
         // authDTO가 null인지 확인
         if (!authDTO) {
-            window.location.href = "/member/login"; // 로그인 페이지로 리디렉션
+            redirectToLogin()
             return; // 추가 작업 중단
         }
 
@@ -236,7 +238,7 @@
                 currentRoomId = chatRoomId;
 
                 // 채팅방 메시지 불러오기
-                loadMessages(currentRoomId);
+                loadChatHistory(currentRoomId);
 
                 // WebSocket 초기화 및 연결
                 initializeWebSocket(currentRoomId);
@@ -247,78 +249,34 @@
             });
     });
 
-    let memberId = [[${product.memberId}]];
-    // 채팅방 메시지 불러오기
-    function loadMessages(chatRoomId) {
-        console.log("Loading messages for chatRoomId:", chatRoomId);
-        fetch(`/chat/messages/${chatRoomId}`)
+    // 채팅방 메시지 기록을 불러오는 함수
+    function loadChatHistory(chatRoomId) {
+        fetch(`/chat/messages/${chatRoomId}`)  // URL 경로 수정
             .then(response => {
                 if (!response.ok) {
-                    // 서버 응답이 200번대가 아닌 경우
-                    throw new Error(`서버 오류: ${response.status}`);
+                    throw new Error('채팅 기록을 불러오는 데 실패했습니다.');
                 }
                 return response.json();
             })
             .then(data => {
-                if (data.messages) {
-                    const messageListContainer = document.getElementById('messages');
-                    messageListContainer.innerHTML = ''; // 기존 메시지 초기화
-
-                    data.messages.forEach(message => {
-                        const messageItem = document.createElement('div');
-                        messageItem.classList.add(
-                            'message',
-                            message.senderId === memberId ? 'sent' : 'received'
-                        );
-                        messageItem.innerHTML = `
-                            <p>${message.content}</p>
-                            <span class="message-timestamp">${new Date(message.createdAt).toLocaleString()}</span>
-                        `;
-                        messageListContainer.appendChild(messageItem);
-                    });
-
-                    // 메시지 로드 후 스크롤 이동
-                    setTimeout(() => {
-                        messageListContainer.scrollTop = messageListContainer.scrollHeight;
-                    }, 100);
-                } else {
-                    console.error('No messages found in the response.');
-                    alert('메시지를 불러오는 데 오류가 발생했습니다. (데이터 없음)');
-                }
+                const messagesContainer = document.getElementById('messages');
+                messagesContainer.innerHTML = '';  // 기존 메시지 초기화
+                data.messages.forEach(message => {  // 'messages' 속성에 접근
+                    const messageDiv = document.createElement('div');
+                    messageDiv.textContent = `${message.senderName}: ${message.content}`;  // 메시지 표시
+                    messagesContainer.appendChild(messageDiv);
+                });
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;  // 마지막 메시지로 스크롤
             })
             .catch(error => {
-                console.error('Error loading messages:', error);
-                alert(`메시지를 불러오는 데 오류가 발생했습니다: ${error.message}`);
+                console.error('Error loading chat history:', error);
+                alert("채팅방을 불러오는 데 오류가 발생했습니다.");
             });
-    }
-
-    // 새로운 메시지 표시
-    function displayNewMessage(message) {
-        const messageListContainer = document.getElementById('messages');
-        const messageItem = document.createElement('div');
-        messageItem.classList.add(
-            'message',
-            message.senderId === memberId ? 'sent' : 'received'
-        );
-        messageItem.innerHTML = `
-           <p>${message.content}</p>
-           <span class="message-timestamp">${new Date(message.createdAt).toLocaleString()}</span>
-        `;
-        messageListContainer.appendChild(messageItem);
-
-        // 스크롤을 마지막 메시지로 이동
-        messageListContainer.scrollTop = messageListContainer.scrollHeight;
     }
 
     // 메시지 전송 함수
     function sendMessage() {
         const messageContent = document.getElementById('messageContent').value.trim();
-        const messageListContainer = document.getElementById('messages'); // 메시지 리스트
-        if (!messageContent || !messageListContainer) {
-            console.error('Required input or message list element not found.');
-            return;
-        }
-
         if (!messageContent) {
             alert("메시지를 입력해주세요.");
             return;
@@ -339,48 +297,44 @@
             status: 'UNREAD'                       // 메시지는 읽지 않은 상태로 설정
         };
 
+        // 메시지 전송 (WebSocket을 통해 전송)
         stompClient.send('/pub/chat/send/chatRoom', {}, JSON.stringify(messageData));
 
         // UI 업데이트 (보낸 메시지 표시)
-        const messageItem = document.createElement('div');
-        messageContent.value = ''; // 입력창 초기화
-        messageListContainer.scrollTop = messageListContainer.scrollHeight; // 마지막 메시지로 스크롤
+        const messagesContainer = document.getElementById('messages');
+        const newMessage = document.createElement('div');
+        messagesContainer.appendChild(newMessage);
+        document.getElementById('messageContent').value = '';  // 입력창 초기화
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;  // 마지막 메시지로 스크롤
     }
 
-    // 채팅방의 상대방 ID 반환
-    function getReceiverIdForRoom(chatRoomId) {
-        const roomData = chatRoomData.find(room => room.chatRoomId === chatRoomId);
-        return roomData ? (roomData.senderId === memberId ? roomData.receiverId : roomData.senderId) : null;
-    }
-
-    // 채팅방의 상대방 이름 반환
-    function getReceiverNameForRoom(chatRoomId) {
-        const roomData = chatRoomData.find(room => room.chatRoomId === chatRoomId);
-        return roomData ? (roomData.senderId === memberId ? roomData.receiverName : roomData.senderName) : null;
-    }
-
-    // WebSocket 초기화 및 메시지 수신 처리
+    // 웹소켓 메시지 수신 처리 (웹소켓을 사용하여 실시간으로 메시지를 받음)
     function initializeWebSocket(chatRoomId) {
-        if (stompClient && stompClient.connected) {
-            stompClient.subscribe(`/sub/chat/${chatRoomId}`, function (messageOutput) {
-                const message = JSON.parse(messageOutput.body);
-                if (message.chatRoomId === currentRoomId) {
-                    displayNewMessage(message);
-                }
-            });
-            return;
-        }
         const socket = new SockJS('/ws');
         stompClient = Stomp.over(socket);
+
         stompClient.connect({}, function (frame) {
+            console.log('웹소켓 연결 성공: ' + frame);
+
+            // 구독 경로 수정: '/sub/chat/{chatRoomId}'로 변경
             stompClient.subscribe(`/sub/chat/${chatRoomId}`, function (messageOutput) {
                 const message = JSON.parse(messageOutput.body);
                 if (message.chatRoomId === currentRoomId) {
-                    displayNewMessage(message);
+                    const messagesContainer = document.getElementById('messages');
+                    const newMessage = document.createElement('div');
+                    newMessage.textContent = `${message.senderName}: ${message.content}`;  // 수신된 메시지 표시
+                    messagesContainer.appendChild(newMessage);
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;  // 마지막 메시지로 스크롤
                 }
             });
         });
     }
+
+            function redirectToLogin() {
+            const currentUrl = window.location.href; // 현재 페이지 URL 가져오기
+            const loginUrl = `/member/login?redirect=` + encodeURIComponent(currentUrl); // 리다이렉트 URL 생성
+            window.location.href = loginUrl; // 로그인 페이지로 이동
+        }
 </script>
 
 <script th:inline="javascript">

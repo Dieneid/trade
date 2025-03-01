@@ -34,7 +34,7 @@ public class ReviewServiceImpl implements ReviewService {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         AuthDTO authDTO = (AuthDTO) authentication.getPrincipal();
-        String username = authDTO.getMemberName();
+        String username = authDTO.getName();
 
         Member member = product.getMember();
 

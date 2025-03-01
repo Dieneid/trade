@@ -42,7 +42,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.DecimalFormat;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -174,9 +173,7 @@ public class ProductController {
 
         // 유효성 검증
         if (bindingResult.hasErrors()) {
-            model.addAttribute("categories", categoryService.getAllCategories()); // 카테고리 목록 추가
-            model.addAttribute("product", productDTO); // 입력된 데이터 유지
-            model.addAttribute("validationErrors", bindingResult.getAllErrors()); // 에러 정보 추가
+            model.addAttribute("categories", categoryService.getAllCategories());
             return "/product/register";
         }
 
@@ -240,11 +237,6 @@ public class ProductController {
         // 조회수 증가
         productService.incrementViewCount(productId);
 
-        // 상품 가격 포맷팅
-        DecimalFormat decimalFormat = new DecimalFormat("#,###");
-        String formattedSellPrice = decimalFormat.format(product.getSellPrice());
-        model.addAttribute("formattedSellPrice", formattedSellPrice);
-
         // 인증 여부에 따라 모델에 추가
         if (authDTO != null) {
             Long currentMemberId = authDTO.getMemberId();
@@ -287,21 +279,11 @@ public class ProductController {
     @PostMapping("/reserved/{productId}")
     public String reservedProduct(@PathVariable Long productId) {
         ProductDTO product = productService.getProductById(productId);
-
-        if (product != null) {
-            // Enum 값으로 직접 비교
-            Status currentStatus = Status.valueOf(product.getStatus());
-
-            if (currentStatus == Status.NEW) {
-                product.setStatus(Status.RESERVED.toString());
-            } else if (currentStatus == Status.RESERVED) {
-                product.setStatus(Status.NEW.toString());
-            }
-
-            productService.updateProductStatus(product); // 상태 업데이트
+        if (product != null && product.getStatus().equals("NEW")) {
+            product.setStatus(Status.RESERVED.toString());
+            productService.updateProductStatus(product);  // DB에 상태 업데이트
         }
-
-        return "redirect:/product/list";
+        return "redirect:/product/list"; // 삭제 후 목록 페이지로 이동
     }
 
     // 이미지 파일을 서빙하는 메서드
