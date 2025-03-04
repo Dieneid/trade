@@ -1,2 +1,2 @@
-# trade2
+# trade
 팀프로젝트
